@@ -19,7 +19,7 @@ public:
   Shop *shop;
   int id;
   int service_time;
-};
+}; //
 
 int main(int argc, char *argv[]) {
 
