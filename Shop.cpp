@@ -1,4 +1,5 @@
 #include "Shop.h"
+#include <string>
 
 // creates mutex for the program. Creates a customer waiting variable.
 void Shop::init() {
@@ -19,7 +20,7 @@ string Shop::int2string(int i) {
 }
 // Takes the absolute value of person and returns the correct positive value for customer and barber
 void Shop::print(int person, string message) {
-  cout << ((person > barber) ? "customer[" : "barber  [") << abs(person) << "]: " << message << endl;
+  cout << ((person > barber) ? "customer[" : "barber[") << abs(person) << "]: " << message << endl;
 }
 
 int Shop::get_cust_drops() const {
@@ -68,7 +69,7 @@ int Shop::visitShop(int customer_id) {
   // Assigns the customer to their barber for service. Sets chosen barber variable.
   for (int i = 0; i < num_barbers_; i++) {
     if (conditions[i]->customer_in_chair_ == 0) {
-      print(customer_id, "moves to the service chair [" + to_string(i) + "]. # waiting seats available = " +
+      print(customer_id, "moves to service chair[" + to_string(i) + "]. # waiting seats available = " +
                              int2string(max_waiting_cust_ - waiting_chairs_.size()));
       conditions[i]->customer_in_chair_ = customer_id;
       conditions[i]->in_service_ = true;
@@ -86,9 +87,9 @@ int Shop::visitShop(int customer_id) {
 // thread terminates.
 void Shop::leaveShop(int customer_id, int barber_id) {
   pthread_mutex_lock(&mutex_);
-
-  // Wait for service to be completed
-  print(customer_id, "wait for the hair-cut to be done");
+  string str = "wait for barber[" + int2string(barber_id) + "] to be done with the hair-cut";
+  // Wait for service to be completed // needs to be wait for barber barber_id
+  print(customer_id, str);
   while (conditions[barber_id]->in_service_ == true) {
     pthread_cond_wait(&conditions[barber_id]->cond_customer_served_, &mutex_);
   }
@@ -96,7 +97,8 @@ void Shop::leaveShop(int customer_id, int barber_id) {
   // Pay the barber and signal barber appropriately
   conditions[barber_id]->money_paid_ = true;
   pthread_cond_signal(&conditions[barber_id]->cond_barber_paid_);
-  print(customer_id, "says good-bye to the barber.");
+  string s = "says good-bye to the barber[" + int2string(barber_id)+"].";
+  print(customer_id, s);
   pthread_mutex_unlock(&mutex_);
 }
 // Method dealing with the behavior of the barber. Takes in barber ID.
@@ -114,7 +116,9 @@ void Shop::helloCustomer(int id) {
     pthread_cond_wait(&conditions[id]->cond_barber_sleeping_, &mutex_);
   }
 
-  print(id, "starts a hair-cut service for " + int2string(conditions[id]->customer_in_chair_));
+  string str = "starts a hair-cut service for customer[" + int2string(conditions[id]->customer_in_chair_) + "]";
+
+  print(id, str);
   pthread_mutex_unlock(&mutex_);
 }
 // Method that takes in a barber id and cycles out the current customer after service is complete. Barber waits for
@@ -124,7 +128,8 @@ void Shop::byeCustomer(int id) {
 
   // Hair Cut-Service is done so signal customer that hair cut is done and wait for payment
   conditions[id]->in_service_ = false;
-  print(id, "says he's done with a hair-cut service for " + int2string(conditions[id]->customer_in_chair_));
+  string str = "says he's done with a hair-cut service for customer[" + int2string(conditions[id]->customer_in_chair_) +"]";
+  print(id, str);
   conditions[id]->money_paid_ = false;
   pthread_cond_signal(&conditions[id]->cond_customer_served_);
   while (conditions[id]->money_paid_ == false) {
