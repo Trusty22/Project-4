@@ -15,9 +15,9 @@ void *customer(void *);
 class ThreadParam
 {
 public:
-    ThreadParam(Shop_org* shop, int id, int service_time) :
+    ThreadParam(Shop* shop, int id, int service_time) :
         shop(shop), id(id), service_time(service_time) {};
-    Shop_org* shop;         
+    Shop* shop;         
     int id;             
     int service_time;    
 };
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     // Multiple barber, one shop, many customers
     pthread_t barber_threads[num_barbers];
     pthread_t customer_threads[num_customers];
-    Shop_org shop(num_barbers, num_chairs, num_customers);
+    Shop shop(num_barbers, num_chairs);
 
     // Create multiple Babers   
     for (int i = 0; i < num_barbers; i++) 
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 void *barber(void *arg) 
 {
     ThreadParam* barber_param = (ThreadParam*) arg;
-    Shop_org& shop = *barber_param->shop;
+    Shop& shop = *barber_param->shop;
     int barber_id = barber_param->id;
     int service_time = barber_param->service_time;
     
@@ -106,7 +106,7 @@ void *barber(void *arg)
 void *customer(void *arg) 
 {
     ThreadParam* customer_param = (ThreadParam*)arg;
-    Shop_org& shop = *customer_param->shop;
+    Shop& shop = *customer_param->shop;
     int customerId = customer_param->id;
 
     customer_param->shop = nullptr;
