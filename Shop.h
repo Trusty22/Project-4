@@ -72,7 +72,8 @@ private:
   pthread_cond_t cond_customers_waiting_;
   pthread_mutex_t mutex_;
 
-  // This vector is how I keep track of each barbers conditions(wasy handeling for its variables)
+  // This vector is how I keep track of each barbers conditions
+  //(easy way handeling the condition variables in barber_cond)
   vector<barber_cond *> cond;
 
   int barber = 0;             // the id of the barber thread
