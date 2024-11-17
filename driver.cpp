@@ -94,6 +94,7 @@ void *customer(void *arg) {
   ThreadParam *customer_param = (ThreadParam *)arg;
   Shop &shop = *customer_param->shop;
   int customerId = customer_param->id;
+  cout << customerId << endl;
 
   customer_param->shop = nullptr;
   delete customer_param;

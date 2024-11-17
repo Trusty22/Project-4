@@ -27,7 +27,7 @@ int Shop::get_cust_drops() const {
   return cust_drops_;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 int Shop::visitShop(int customer_id) {
   pthread_mutex_lock(&mutex_);
   // If all chairs are full, and no barber availble, then leave shop
@@ -40,7 +40,7 @@ int Shop::visitShop(int customer_id) {
 
   // If someone is being served or transitioning waiting to service chair and no barbers are available
   // then take a chair and wait for service
-  if (!waiting_chairs_.empty()) {
+  if (!waiting_chairs_.empty()) { //
     waiting_chairs_.push(customer_id);
     print(customer_id, "takes a waiting chair. # waiting seats available = " +
                            int2string(max_waiting_cust_ - waiting_chairs_.size()));
@@ -82,6 +82,8 @@ int Shop::visitShop(int customer_id) {
   }
 
   pthread_mutex_unlock(&mutex_);
+  // cout << choosen_barber << endl;
+  barb_number = choosen_barber;
   return choosen_barber; // returns the chosen barber index to service the customer.
 }
 // Method for when a customer is ready to leave the shop. Waits for hair cut to be done, pays barber and leaves. Customer
