@@ -68,8 +68,8 @@ private:
 
   static const int barber = 0; // the id of the barber thread
   void init();
-  string int2string(int i);
   void print(int person, string message);
+  string int2string(int i);
 };
 
 #endif
