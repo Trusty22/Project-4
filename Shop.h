@@ -38,7 +38,7 @@ private:
   int cust_drops_;
   int num_barbers_; // Total number of barbers in the shop
 
-    //
+  //
   // mutex_ is used in conjuction with all conditional variables
 
   struct barber_cond {
@@ -73,6 +73,7 @@ private:
   void init();
   string int2string(int i);
   void print(int person, string message);
+  int getBarber();
 };
 
 #endif

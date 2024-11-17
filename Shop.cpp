@@ -26,6 +26,9 @@ void Shop::print(int person, string message) {
 int Shop::get_cust_drops() const {
   return cust_drops_;
 }
+int Shop::getBarber() const {
+  return barber;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 int Shop::visitShop(int customer_id) {

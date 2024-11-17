@@ -100,6 +100,7 @@ void *customer(void *arg) {
   delete customer_param;
 
   int barber = -1;
+  barber = get
   barber = shop.visitShop(customerId);
   if (barber != -1) {
     shop.leaveShop(customerId, barber);
