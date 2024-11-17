@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     pthread_create(&cThread[i], NULL, customer, customer_param);
   }
 
-  //loops through all customers barbers to join, cancel, and detach
+  // loops through all customers barbers to join, cancel, and detach
   for (int i = 0; i < num_customers; i++) {
     pthread_join(cThread[i], NULL);
   }
@@ -99,6 +99,7 @@ void *barber(void *arg) {
   ThreadParam *barber_param = (ThreadParam *)arg;
   Shop &shop = *barber_param->shop;
 
+  // bid = barber id
   int bid = barber_param->id;
   int service_time = barber_param->service_time;
 
@@ -120,6 +121,8 @@ void *barber(void *arg) {
 void *customer(void *arg) {
   ThreadParam *customer_param = (ThreadParam *)arg;
   Shop &shop = *customer_param->shop;
+  // cid = customer id and barb Num is used to check for if we leave shop due to
+  // invalid barber id
   int cid = customer_param->id;
   int barbNum = -1;
 
