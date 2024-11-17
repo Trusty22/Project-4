@@ -26,7 +26,7 @@ public:
     init();
   };
 
-  int visitShop(int customer_id); // return true only when a customer got a service
+  bool visitShop(int customer_id); // return true only when a customer got a service
   void leaveShop(int customer_id, int barber_id);
 
   void helloCustomer(int id);

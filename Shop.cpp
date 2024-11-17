@@ -27,7 +27,7 @@ int Shop::get_cust_drops() const {
   return cust_drops_;
 }
 
-int Shop::visitShop(int customer_id) {
+bool Shop::visitShop(int customer_id) {
   pthread_mutex_lock(&mutex_);
   // If all chairs are full, and no barber availble, then leave shop
   if (waiting_chairs_.size() == max_waiting_cust_) {
