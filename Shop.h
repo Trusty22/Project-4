@@ -27,7 +27,7 @@ public:
   };
 
   int visitShop(int customer_id); // return true only when a customer got a service
-  void leaveShop(int customer_id);
+  void leaveShop(int customer_id, int barber_id);
   void helloCustomer(int id);
   void byeCustomer(int id);
   int get_cust_drops() const;
@@ -41,10 +41,8 @@ private:
   //
   // mutex_ is used in conjuction with all conditional variables
 
-  struct barber_cond {
-    // REDO
-    //  Added so condition variables to coordinate threads are held in a struct conditions_struct
-    //  allows for each barber to get their own condition variables
+  struct barber_cond { // Added so condition variables to coordinate threads are held in a struct conditions_struct
+    // allows for each barber to get their own condition variables
     barber_cond() {
       in_service_ = false;
       money_paid_ = false;
@@ -69,11 +67,9 @@ private:
   vector<barber_cond *> cond; // vector used to give each barber their own set of condition variables
 
   static const int barber = 0; // the id of the barber thread
-  int barb_number = -1;
   void init();
   string int2string(int i);
   void print(int person, string message);
-  int getBarber();
 };
 
 #endif

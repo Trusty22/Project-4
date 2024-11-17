@@ -94,13 +94,11 @@ void *customer(void *arg) {
   ThreadParam *customer_param = (ThreadParam *)arg;
   Shop &shop = *customer_param->shop;
   int customerId = customer_param->id;
-  cout << customerId << endl;
 
   customer_param->shop = nullptr;
   delete customer_param;
 
   int barber = -1;
-  barber = get
   barber = shop.visitShop(customerId);
   if (barber != -1) {
     shop.leaveShop(customerId, barber);
