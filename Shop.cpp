@@ -8,8 +8,8 @@ void Shop::init() {
 
   // Fills the vector list with condition structs so each barber will have their own vector.
   for (int i = 0; i < num_barbers_; i++) {
-    conditions_struct *new_struct = new conditions_struct();
-    conditions.push_back(new_struct);
+    barber_cond *barber_condi = new barber_cond();
+    cond.push_back(barber_condi);
   }
 }
 
@@ -26,6 +26,7 @@ void Shop::print(int person, string message) {
 int Shop::get_cust_drops() const {
   return cust_drops_;
 }
+///
 
 int Shop::visitShop(int customer_id) {
   pthread_mutex_lock(&mutex_);
@@ -51,7 +52,7 @@ int Shop::visitShop(int customer_id) {
 
   // finds an open barber and sets openbarber variable to that barbers index
   for (int i = 0; i < num_barbers_; i++) {
-    if (conditions[i]->customer_in_chair_ == 0) {
+    if (cond[i]->customer_in_chair_ == 0) {
       openBarber = i;
     }
   }
@@ -68,13 +69,13 @@ int Shop::visitShop(int customer_id) {
 
   // Assigns the customer to their barber for service. Sets chosen barber variable.
   for (int i = 0; i < num_barbers_; i++) {
-    if (conditions[i]->customer_in_chair_ == 0) {
+    if (cond[i]->customer_in_chair_ == 0) {
       print(customer_id, "moves to service chair[" + to_string(i) + "]. # waiting seats available = " +
                              int2string(max_waiting_cust_ - waiting_chairs_.size()));
-      conditions[i]->customer_in_chair_ = customer_id;
-      conditions[i]->in_service_ = true;
+      cond[i]->customer_in_chair_ = customer_id;
+      cond[i]->in_service_ = true;
 
-      pthread_cond_signal(&conditions[i]->cond_barber_sleeping_);
+      pthread_cond_signal(&cond[i]->cond_barber_sleeping_);
       choosen_barber = i;
       break;
     }
@@ -90,14 +91,14 @@ void Shop::leaveShop(int customer_id, int barber_id) {
   string str = "wait for barber[" + int2string(barber_id) + "] to be done with the hair-cut";
   // Wait for service to be completed // needs to be wait for barber barber_id
   print(customer_id, str);
-  while (conditions[barber_id]->in_service_ == true) {
-    pthread_cond_wait(&conditions[barber_id]->cond_customer_served_, &mutex_);
+  while (cond[barber_id]->in_service_ == true) {
+    pthread_cond_wait(&cond[barber_id]->cond_customer_served_, &mutex_);
   }
 
   // Pay the barber and signal barber appropriately
-  conditions[barber_id]->money_paid_ = true;
-  pthread_cond_signal(&conditions[barber_id]->cond_barber_paid_);
-  string s = "says good-bye to the barber[" + int2string(barber_id)+"].";
+  cond[barber_id]->money_paid_ = true;
+  pthread_cond_signal(&cond[barber_id]->cond_barber_paid_);
+  string s = "says good-bye to the barber[" + int2string(barber_id) + "].";
   print(customer_id, s);
   pthread_mutex_unlock(&mutex_);
 }
@@ -106,17 +107,17 @@ void Shop::helloCustomer(int id) {
   pthread_mutex_lock(&mutex_);
 
   // If no customers than barber can sleep
-  if (waiting_chairs_.empty() && conditions[id]->customer_in_chair_ == 0) {
+  if (waiting_chairs_.empty() && cond[id]->customer_in_chair_ == 0) {
     print(id, "sleeps because of no customers.");
-    pthread_cond_wait(&conditions[id]->cond_barber_sleeping_, &mutex_);
+    pthread_cond_wait(&cond[id]->cond_barber_sleeping_, &mutex_);
   }
 
-  if (conditions[id]->customer_in_chair_ == 0) // checks if a customer is currently sitting in the chair getting service
+  if (cond[id]->customer_in_chair_ == 0) // checks if a customer is currently sitting in the chair getting service
   {
-    pthread_cond_wait(&conditions[id]->cond_barber_sleeping_, &mutex_);
+    pthread_cond_wait(&cond[id]->cond_barber_sleeping_, &mutex_);
   }
 
-  string str = "starts a hair-cut service for customer[" + int2string(conditions[id]->customer_in_chair_) + "]";
+  string str = "starts a hair-cut service for customer[" + int2string(cond[id]->customer_in_chair_) + "]";
 
   print(id, str);
   pthread_mutex_unlock(&mutex_);
@@ -127,17 +128,17 @@ void Shop::byeCustomer(int id) {
   pthread_mutex_lock(&mutex_);
 
   // Hair Cut-Service is done so signal customer that hair cut is done and wait for payment
-  conditions[id]->in_service_ = false;
-  string str = "says he's done with a hair-cut service for customer[" + int2string(conditions[id]->customer_in_chair_) +"]";
+  cond[id]->in_service_ = false;
+  string str = "says he's done with a hair-cut service for customer[" + int2string(cond[id]->customer_in_chair_) + "]";
   print(id, str);
-  conditions[id]->money_paid_ = false;
-  pthread_cond_signal(&conditions[id]->cond_customer_served_);
-  while (conditions[id]->money_paid_ == false) {
-    pthread_cond_wait(&conditions[id]->cond_barber_paid_, &mutex_);
+  cond[id]->money_paid_ = false;
+  pthread_cond_signal(&cond[id]->cond_customer_served_);
+  while (cond[id]->money_paid_ == false) {
+    pthread_cond_wait(&cond[id]->cond_barber_paid_, &mutex_);
   }
 
   // Signal to next customer to take a seat after chair is empty.
-  conditions[id]->customer_in_chair_ = 0;
+  cond[id]->customer_in_chair_ = 0;
   print(id, "calls in another customer");
   pthread_cond_signal(&cond_customers_waiting_);
 
