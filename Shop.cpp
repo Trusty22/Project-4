@@ -54,7 +54,7 @@ int Shop_org::get_cust_drops() const {
 
 // visitShop
 // This function uses to assign customer to available barber
-int Shop_org::visitShop(int id) {
+bool Shop_org::visitShop(int id) {
 
   // Start the lock
   pthread_mutex_lock(&mutex_);

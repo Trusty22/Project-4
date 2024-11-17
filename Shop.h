@@ -34,7 +34,7 @@ public:
 
 
   // Return true only when a customer got a service
-  int visitShop(int id);
+  bool visitShop(int id);
 
   // Customer leave the shop
   void leaveShop(int customer_id_, int barber_id_);
