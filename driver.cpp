@@ -19,6 +19,21 @@ public:
   int service_time;
 };
 
+/*
+ * Driver makes a barber shop with multiple barbers and customers.
+ * It uses threads for the producer-consumer realationship where arbers serve customers.
+ *
+ * After initialization of the threads and rading args we loop multiple times.
+ * The first loop iterates through the number of barbers, creating a thread for each barber.
+ * Each thread contains the shop reference, barber ID, and service time.
+ * The second loop handles the customers threads, usleep makes it randomly come in
+ * (this will cause variation in mine vs test cases).
+ * Each customer thread has a shop reference and customer ID.
+ * After all customer threads are created another loop happens which waits for all customer threads to finish.
+ * When the customers finish the next loop stops the infinite loops.
+ * Finally, the last loop detaches all barbers so we dont overflow all that info into a core dump.
+ */
+
 int main(int argc, char *argv[]) {
 
   // Read arguments from command line
@@ -26,24 +41,27 @@ int main(int argc, char *argv[]) {
     cout << "Usage: num_barbers num_chairs num_customers service_time" << endl;
     return -1;
   }
+
   int num_barbers = atoi(argv[1]);
   int num_chairs = atoi(argv[2]);
   int num_customers = atoi(argv[3]);
-  
+
   int service_time = atoi(argv[4]);
 
-  // Multiple barber, one shop, many customers
+  // Multiple barbers one shop many customers
+
+  // Create arrays to hold thread identifiers for barbers and customers.
   pthread_t barber_threads[num_barbers];
   pthread_t customer_threads[num_customers];
+
+  // Initializes the Shop object with n number of barbers and chairs.
   Shop shop(num_barbers, num_chairs);
 
-  // Create multiple Babers
   for (int i = 0; i < num_barbers; i++) {
     ThreadParam *barber_param = new ThreadParam(&shop, i, service_time);
     pthread_create(&barber_threads[i], NULL, barber, barber_param);
   }
 
-  // Create multiple Customers
   for (int i = 0; i < num_customers; i++) {
     usleep(rand() % 1000);
     int id = i + 1;
@@ -51,17 +69,14 @@ int main(int argc, char *argv[]) {
     pthread_create(&customer_threads[i], NULL, customer, customer_param);
   }
 
-  // Wait for customers to finish
   for (int i = 0; i < num_customers; i++) {
     pthread_join(customer_threads[i], NULL);
   }
 
-  // Wait until barber finish
   for (int i = 0; i < num_barbers; i++) {
     pthread_cancel(barber_threads[i]);
   }
 
-  // Terminated barber thread
   for (int i = 0; i < num_barbers; i++) {
     pthread_detach(barber_threads[i]);
   }
@@ -70,11 +85,10 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// Barber
-// Barber thread
 void *barber(void *arg) {
   ThreadParam *barber_param = (ThreadParam *)arg;
   Shop &shop = *barber_param->shop;
+
   int barber_id = barber_param->id;
   int service_time = barber_param->service_time;
 
@@ -89,8 +103,6 @@ void *barber(void *arg) {
   return nullptr;
 }
 
-// customer
-// Customer thread
 void *customer(void *arg) {
   ThreadParam *customer_param = (ThreadParam *)arg;
   Shop &shop = *customer_param->shop;
@@ -99,10 +111,10 @@ void *customer(void *arg) {
   customer_param->shop = nullptr;
   delete customer_param;
 
-  int barber = -1;
-  barber = shop.visitShop(customerId);
-  if (barber != -1) {
-    shop.leaveShop(customerId, barber);
+  int barbers = -1;
+  barbers = shop.visitShop(customerId);
+  if (barbers != -1) {
+    shop.leaveShop(customerId, barbers);
   }
   return nullptr;
 }
