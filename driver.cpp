@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   int num_barbers = atoi(argv[1]);
   int num_chairs = atoi(argv[2]);
   int num_customers = atoi(argv[3]);
+  
   int service_time = atoi(argv[4]);
 
   // Multiple barber, one shop, many customers

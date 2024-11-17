@@ -66,7 +66,9 @@ private:
   pthread_mutex_t mutex_;
   vector<barber_cond *> cond; // vector used to give each barber their own set of condition variables
 
-  static const int barber = 0; // the id of the barber thread
+  int barber = 0; // the id of the barber thread
+  void setBarb(int id) const;
+  void getBarb() const;
   void init();
   void print(int person, string message);
   string int2string(int i);

@@ -20,17 +20,20 @@ string Shop::int2string(int i) {
 }
 // Takes the absolute value of person and returns the correct positive value for customer and barber
 void Shop::print(int person, string message) {
-  cout << ((person > barber) ? "customer[" : "barber[") << abs(person) << "]: " << message << endl;
+
+  cout
+      << ((person > barber) ? "customer[" : "barber[") << abs(person) << "]: " << message << endl;
 }
 
 int Shop::get_cust_drops() const {
   return cust_drops_;
 }
+
 ////////////////////////////////////////////////////////////////////////
 int Shop::visitShop(int id) {
   pthread_mutex_lock(&mutex_);
   // If all chairs are full, and no barber availble, then leave shop
-  if (waiting_chairs_.size() == max_waiting_cust_) {
+  if (waiting_chairs_.size() >= max_waiting_cust_) {
     print(id, "leaves the shop because of no available waiting chairs.");
     ++cust_drops_;
     pthread_mutex_unlock(&mutex_);
@@ -53,6 +56,7 @@ int Shop::visitShop(int id) {
   for (int barb = 0; barb < num_barbers_; barb++) {
     if (cond[barb]->customer_in_chair_ == 0) {
       availBarb = barb;
+      barber = availBarb;
     }
   }
 
@@ -69,6 +73,8 @@ int Shop::visitShop(int id) {
   // Assigns the customer to their barber for service. Sets chosen barber variable.
   for (int i = 0; i < num_barbers_; i++) {
     if (cond[i]->customer_in_chair_ == 0) {
+      //cout << id << " " << barber << " "<<i << endl;
+      barber = i;
       string str = "moves to service chair[" + to_string(i) + "]. # waiting seats available = " +
                    int2string(max_waiting_cust_ - waiting_chairs_.size());
       print(id, str);
@@ -83,6 +89,7 @@ int Shop::visitShop(int id) {
   }
 
   pthread_mutex_unlock(&mutex_);
+  barber = barbID;
   return barbID; // returns the chosen barber index to service the customer.
 }
 
@@ -90,7 +97,7 @@ int Shop::visitShop(int id) {
 // thread terminates.
 void Shop::leaveShop(int id, int barber_id) {
   pthread_mutex_lock(&mutex_);
-
+  
   // Wait for service to be completed // needs to be wait for barber barber_id
   string str = "wait for barber[" + int2string(barber_id) + "] to be done with the hair-cut";
   print(id, str);
@@ -102,7 +109,9 @@ void Shop::leaveShop(int id, int barber_id) {
   // Pay the barber and signal barber appropriately
   cond[barber_id]->money_paid_ = true;
   pthread_cond_signal(&cond[barber_id]->cond_barber_paid_);
-
+  barber = barber_id;
+  //cout<< id << " " << barber_id <<endl;
+  
   string s = "says good-bye to the barber[" + int2string(barber_id) + "].";
   print(id, s);
 
@@ -112,7 +121,7 @@ void Shop::leaveShop(int id, int barber_id) {
 // Method dealing with the behavior of the barber. Takes in barber ID.
 void Shop::helloCustomer(int id) {
   pthread_mutex_lock(&mutex_);
-
+  barber = id;
   // If no customers than barber can sleep
   if (cond[id]->customer_in_chair_ == 0 && waiting_chairs_.empty()) {
     print(id, "sleeps because of no customers.");
