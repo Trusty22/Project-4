@@ -41,7 +41,9 @@ private:
   //
   // mutex_ is used in conjuction with all conditional variables
 
-  struct barber_cond { // Added so condition variables to coordinate threads are held in a struct conditions_struct
+  struct barber_cond { 
+    //REDO
+    // Added so condition variables to coordinate threads are held in a struct conditions_struct
     // allows for each barber to get their own condition variables
     barber_cond() {
       in_service_ = false;
