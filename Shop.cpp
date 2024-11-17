@@ -88,6 +88,7 @@ int Shop::visitShop(int id) {
                    int2string(max_waiting_cust_ - waiting_chairs_.size());
       print(id, str);
 
+      // swaps out barb
       cond[i]->customer_in_chair_ = id;
       cond[i]->in_service_ = true;
 
@@ -102,32 +103,33 @@ int Shop::visitShop(int id) {
   return barbID;
 }
 
-// Method for when a customer is ready to leave the shop. Waits for hair cut to be done, pays barber and leaves. Customer
-// thread terminates.
-void Shop::leaveShop(int id, int barber_id) {
+// Modified to take in barber id so I can know when to wait, if customer is in service.
+// Or for print and Paying the barber
+// When customer is done, they pay and leave
+void Shop::leaveShop(int id, int barbId) {
   pthread_mutex_lock(&mutex_);
 
-  // Wait for service to be completed // needs to be wait for barber barber_id
-  string str = "wait for barber[" + int2string(barber_id) + "] to be done with the hair-cut";
+  // Wait for service to be completed via waiting on barber id
+  string str = "wait for barber[" + int2string(barbId) + "] to be done with the hair-cut";
   print(id, str);
 
-  while (cond[barber_id]->in_service_ == true) {
-    pthread_cond_wait(&cond[barber_id]->cond_customer_served_, &mutex_);
+  while (cond[barbId]->in_service_ == true) {
+    pthread_cond_wait(&cond[barbId]->cond_customer_served_, &mutex_);
   }
 
   // Pay the barber and signal barber appropriately
-  cond[barber_id]->money_paid_ = true;
-  pthread_cond_signal(&cond[barber_id]->cond_barber_paid_);
-  barber = barber_id;
-  // cout<< id << " " << barber_id <<endl;
+  cond[barbId]->money_paid_ = true;
+  pthread_cond_signal(&cond[barbId]->cond_barber_paid_);
+  barber = barbId;
 
-  string s = "says good-bye to the barber[" + int2string(barber_id) + "].";
+  string s = "says good-bye to the barber[" + int2string(barbId) + "].";
   print(id, s);
 
   pthread_mutex_unlock(&mutex_);
 }
 
-// Method dealing with the behavior of the barber. Takes in barber ID.
+// Modified to take in customer id. Helps me deal with the behavior of the barber
+// such as if no customers wait.
 void Shop::helloCustomer(int id) {
   pthread_mutex_lock(&mutex_);
   barber = id;
@@ -137,8 +139,9 @@ void Shop::helloCustomer(int id) {
     pthread_cond_wait(&cond[id]->cond_barber_sleeping_, &mutex_);
   }
 
-  if (cond[id]->customer_in_chair_ == 0) // checks if a customer is currently sitting in the chair getting service
-  {
+  // This double case is here to check that if customer is getting service
+  // and is not empty, then only wait not sleep
+  if (cond[id]->customer_in_chair_ == 0) {
     pthread_cond_wait(&cond[id]->cond_barber_sleeping_, &mutex_);
   }
 
@@ -147,12 +150,14 @@ void Shop::helloCustomer(int id) {
   print(id, str);
   pthread_mutex_unlock(&mutex_);
 }
-// Method that takes in a barber id and cycles out the current customer after service is complete.
-// Barber waits for payment. Once paid the customer leaves and now a new customer is signaled in.
+
+// Modified to take in barber id. Helps me deal with the behavior of the customer.
+// The method moves to the next the customer after service. Then barber waits until paid.
+// When paid the customer is changed for the next customer
 void Shop::byeCustomer(int id) {
   pthread_mutex_lock(&mutex_);
 
-  // Hair Cut-Service is done so signal customer that hair cut is done and wait for payment
+  // Hair Cut-Service is done so signal customer and wait for payment
   cond[id]->in_service_ = false;
 
   string str = "says he's done with a hair-cut service for customer[" + int2string(cond[id]->customer_in_chair_) + "]";
@@ -164,8 +169,7 @@ void Shop::byeCustomer(int id) {
   while (cond[id]->money_paid_ == false) {
     pthread_cond_wait(&cond[id]->cond_barber_paid_, &mutex_);
   }
-
-  // Signal to next customer to take a seat after chair is empty.
+  // Signal to customer to get next one
   cond[id]->customer_in_chair_ = 0;
   print(id, "calls in another customer");
 
