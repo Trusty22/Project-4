@@ -30,9 +30,18 @@ int Shop::get_cust_drops() const {
 }
 
 ////////////////////////////////////////////////////////////////////////
+/*
+I reworked this from bool to int like shown in the documentaion code of visitshop.
+I return the barberId instead its more usefull as I can use the current barber id
+to print. This function not only acts as a way for setting up a barber with a
+customer, it helps the print function to acuratly print out current id.
+The code is similar to the starter but I made sure to check for error value incase of a
+not found or avalible barber (-1). I changed some of the wording to be similar to the test cases
+and I assign the customer to their barber.
+*/
 int Shop::visitShop(int id) {
   pthread_mutex_lock(&mutex_);
-  // If all chairs are full, and no barber availble, then leave shop
+  // If all chairs are full then leave shop
   if (waiting_chairs_.size() >= max_waiting_cust_) {
     print(id, "leaves the shop because of no available waiting chairs.");
     ++cust_drops_;
@@ -50,9 +59,10 @@ int Shop::visitShop(int id) {
     waiting_chairs_.pop();
   }
 
-  int availBarb = -1; // this will be returned if no barber is found, error value
+  // this is used to check for if no barber is found or avalible
+  int availBarb = -1;
 
-  // finds an open barber and sets availBarb variable to that barbers index
+  // assigns avlible barber and sets availBarb to that barber
   for (int barb = 0; barb < num_barbers_; barb++) {
     if (cond[barb]->customer_in_chair_ == 0) {
       availBarb = barb;
@@ -60,7 +70,7 @@ int Shop::visitShop(int id) {
     }
   }
 
-  // Couldn't find barber, customer is put into the waiting queue
+  // If we cant't find the barber, customer gets put in waiting
   if (availBarb == -1) {
     waiting_chairs_.push(id);
     print(id, "takes a waiting chair. # waiting seats available = " +
@@ -68,12 +78,11 @@ int Shop::visitShop(int id) {
     pthread_cond_wait(&cond_customers_waiting_, &mutex_);
     waiting_chairs_.pop();
   }
-
-  int barbID = -1; // error value incase switching barbers has a problem
-  // Assigns the customer to their barber for service. Sets chosen barber variable.
+  // this is used to check for if no barber is found or avalible when switching barbers
+  int barbID = -1;
+  // assigns avlible customer to barber and sets barbID to the last avlible barber
   for (int i = 0; i < num_barbers_; i++) {
     if (cond[i]->customer_in_chair_ == 0) {
-      //cout << id << " " << barber << " "<<i << endl;
       barber = i;
       string str = "moves to service chair[" + to_string(i) + "]. # waiting seats available = " +
                    int2string(max_waiting_cust_ - waiting_chairs_.size());
@@ -90,14 +99,14 @@ int Shop::visitShop(int id) {
 
   pthread_mutex_unlock(&mutex_);
   barber = barbID;
-  return barbID; // returns the chosen barber index to service the customer.
+  return barbID;
 }
 
 // Method for when a customer is ready to leave the shop. Waits for hair cut to be done, pays barber and leaves. Customer
 // thread terminates.
 void Shop::leaveShop(int id, int barber_id) {
   pthread_mutex_lock(&mutex_);
-  
+
   // Wait for service to be completed // needs to be wait for barber barber_id
   string str = "wait for barber[" + int2string(barber_id) + "] to be done with the hair-cut";
   print(id, str);
@@ -110,8 +119,8 @@ void Shop::leaveShop(int id, int barber_id) {
   cond[barber_id]->money_paid_ = true;
   pthread_cond_signal(&cond[barber_id]->cond_barber_paid_);
   barber = barber_id;
-  //cout<< id << " " << barber_id <<endl;
-  
+  // cout<< id << " " << barber_id <<endl;
+
   string s = "says good-bye to the barber[" + int2string(barber_id) + "].";
   print(id, s);
 
