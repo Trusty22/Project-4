@@ -8,8 +8,8 @@ void Shop::init() {
 
   // Fills the vector list with condition structs so each barber will have their own vector.
   for (int i = 0; i < num_barbers_; i++) {
-    barber_cond *new_struct = new barber_cond();
-    cond.push_back(new_struct);
+    barber_cond *barbs = new barber_cond();
+    cond.push_back(barbs);
   }
 }
 
